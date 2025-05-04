@@ -14,7 +14,9 @@ coroutines = "1.10.1"
 room = "2.7.1"
 retrofit = "2.9.0"
 okhttp = "4.12.0"
-accompanist = "0.30.1"
+ksp = "2.1.0-1.0.29"
+vico = "2.1.2"
+coilCompose = "3.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,9 +49,11 @@ retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = 
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
-accompanist-swiperefresh = { group = "com.google.accompanist", name = "accompanist-swiperefresh", version.ref = "accompanist" }
 
-
+vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -57,6 +61,8 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
 
 [bundles]
 lifecycle = [
@@ -69,7 +75,8 @@ compose = [
     "androidx-ui-graphics",
     "androidx-ui-tooling-preview",
     "androidx-material3",
-    "androidx-activity-compose"
+    "androidx-activity-compose",
+    "androidx-navigation-compose"
 ]
 coroutines = [
     "kotlinx-coroutines-core",
@@ -79,12 +86,21 @@ room = [
     "room-runtime",
     "room-ktx"
 ]
+coil = [
+    "coil-compose",
+    "coil-network-okhttp"
+]
 hilt = [
-    "hilt-android"
+    "hilt-android",
+    "hilt-navigation-compose"
 ]
 networking = [
     "retrofit",
     "retrofit-converter-gson",
     "okhttp",
     "okhttp-logging-interceptor"
+]
+vico = [
+    "vico-compose",
+    "vico-compose-m3"
 ]

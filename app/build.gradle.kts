@@ -1,10 +1,34 @@
+
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
 }
+
+// Function to safely load properties from local.properties
+fun getApiKey(project: Project, propertyName: String): String {
+    val localPropertiesFile = project.rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        val properties = Properties()
+        FileInputStream(localPropertiesFile).use { fis ->
+            properties.load(fis)
+        }
+        // Return property value or an empty string if not found
+        // The quotes are expected to be part of the value in local.properties
+        return properties.getProperty(propertyName, "\"\"")
+    }
+    // Fallback for CI: Read from environment variable if local.properties doesn't exist or key missing
+    // Gradle automatically makes environment variables available as project properties
+    // Note: env var names often match property names, but can be different if mapped in CI
+    return project.findProperty(propertyName)?.toString() ?: "\"\"" // Default to empty string literal if not found anywhere
+}
+
 
 android {
     namespace = "com.eltonkola.stox"
@@ -18,6 +42,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val polygonApiKey = getApiKey(project, "polygonApiKey")
+        buildConfigField("String", "PolygonApiKey", "\"$polygonApiKey\"")
+
     }
 
     buildTypes {
@@ -38,6 +66,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -48,16 +77,17 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
 
-    implementation(libs.accompanist.swiperefresh)
     implementation(libs.bundles.networking)
     implementation(libs.bundles.coroutines)
     implementation(libs.bundles.room)
     implementation(libs.bundles.lifecycle)
     implementation(libs.bundles.compose)
+    implementation(libs.bundles.hilt)
+    implementation(libs.bundles.vico)
+    implementation(libs.bundles.coil)
 
-    implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-
+    ksp(libs.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
