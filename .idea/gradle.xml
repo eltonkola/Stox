@@ -11,6 +11,13 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/app/core-data" />
+            <option value="$PROJECT_DIR$/app/core-domain" />
+            <option value="$PROJECT_DIR$/app/core-ui" />
+            <option value="$PROJECT_DIR$/app/feature-add-stock" />
+            <option value="$PROJECT_DIR$/app/feature-stock-detail" />
+            <option value="$PROJECT_DIR$/app/feature-stock-list" />
+            <option value="$PROJECT_DIR$/app/feature-stocks-overview" />
           </set>
         </option>
       </GradleProjectSettings>

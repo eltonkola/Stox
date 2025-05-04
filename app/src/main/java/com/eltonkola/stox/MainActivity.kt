@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.eltonkola.stox.ui.navigation.StockAppNavigation
+import com.eltonkola.stox.navigation.StockAppNavigation
 import com.eltonkola.stox.ui.theme.StoxTheme
 import dagger.hilt.android.AndroidEntryPoint
 

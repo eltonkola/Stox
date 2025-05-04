@@ -79,14 +79,26 @@ dependencies {
 
     implementation(libs.bundles.networking)
     implementation(libs.bundles.coroutines)
-    implementation(libs.bundles.room)
+
     implementation(libs.bundles.lifecycle)
     implementation(libs.bundles.compose)
-    implementation(libs.bundles.hilt)
-    implementation(libs.bundles.vico)
-    implementation(libs.bundles.coil)
 
+
+
+    implementation(project(":app:core-ui"))
+    implementation(project(":app:core-data"))
+    implementation(project(":app:core-domain"))
+
+    implementation(project(":app:feature-add-stock"))
+    implementation(project(":app:feature-stock-list"))
+    implementation(project(":app:feature-stock-detail"))
+    implementation(project(":app:feature-stocks-overview"))
+
+
+    implementation(libs.bundles.hilt)
     kapt(libs.hilt.compiler)
+
+    implementation(libs.bundles.room)
     ksp(libs.room.compiler)
 
     testImplementation(libs.junit)

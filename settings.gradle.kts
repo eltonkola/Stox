@@ -21,3 +21,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "Stox"
 include(":app")
+include(":app:core-ui")
+include(":app:core-domain")
+include(":app:core-data")
+include(":app:feature-stocks-overview")
+include(":app:feature-stock-list")
+include(":app:feature-stock-detail")
+include(":app:feature-add-stock")

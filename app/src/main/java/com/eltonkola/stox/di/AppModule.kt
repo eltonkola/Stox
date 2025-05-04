@@ -1,22 +1,22 @@
 package com.eltonkola.stox.di
 
 import android.app.Application
+import com.eltonkola.core_data.local.dao.StockDao
+import com.eltonkola.core_data.local.database.StockDatabase
+import com.eltonkola.core_data.remote.RetrofitClient
+import com.eltonkola.core_data.remote.api.PolygonService
+import com.eltonkola.core_data.repository.StockRepository
+import com.eltonkola.core_domain.usecases.AddStockUseCase
+import com.eltonkola.core_domain.usecases.GetAllStocksUseCase
+import com.eltonkola.core_domain.usecases.GetErrorUseCase
+import com.eltonkola.core_domain.usecases.GetHistoricalDataUseCase
+import com.eltonkola.core_domain.usecases.GetStockDetailsUseCase
+import com.eltonkola.core_domain.usecases.GetStockExtraDetailsUseCase
+import com.eltonkola.core_domain.usecases.RefreshStockDataUseCase
+import com.eltonkola.core_domain.usecases.RemoveStockUseCase
+import com.eltonkola.core_domain.usecases.ResetErrorUseCase
+import com.eltonkola.core_domain.usecases.SearchStocksUseCase
 import com.eltonkola.stox.BuildConfig
-import com.eltonkola.stox.data.local.dao.StockDao
-import com.eltonkola.stox.data.local.database.StockDatabase
-import com.eltonkola.stox.data.remote.RetrofitClient
-import com.eltonkola.stox.data.remote.api.PolygonService
-import com.eltonkola.stox.data.repository.StockRepository
-import com.eltonkola.stox.domain.usecases.AddStockUseCase
-import com.eltonkola.stox.domain.usecases.GetAllStocksUseCase
-import com.eltonkola.stox.domain.usecases.GetErrorUseCase
-import com.eltonkola.stox.domain.usecases.GetHistoricalDataUseCase
-import com.eltonkola.stox.domain.usecases.GetStockDetailsUseCase
-import com.eltonkola.stox.domain.usecases.GetStockExtraDetailsUseCase
-import com.eltonkola.stox.domain.usecases.RefreshStockDataUseCase
-import com.eltonkola.stox.domain.usecases.RemoveStockUseCase
-import com.eltonkola.stox.domain.usecases.ResetErrorUseCase
-import com.eltonkola.stox.domain.usecases.SearchStocksUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -50,6 +50,13 @@ object AppModule {
     fun provideApiKey(): String {
         return BuildConfig.PolygonApiKey
     }
+
+    @Provides
+    @Singleton
+    fun provideDebugMode(): Boolean {
+        return BuildConfig.DEBUG
+    }
+
 
     @Provides
     @Singleton
