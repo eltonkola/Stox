@@ -8,11 +8,12 @@ Icon generated with leonardo app (https://leonardo.app/), adapted with icon.kitc
 Theme generated with material theme builder (https://material-foundation.github.io/material-theme-builder/)
 
 ## Screenshots
-<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_1.png" width="200">
-<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_2.png" width="200">
-<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_3.png" width="200">
-<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_4.png" width="200">
-<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_5.png" width="200">
+
+|                                                                                             |                                                                                             |                                                                                             |                                                                                             |                                                                                             |
+| :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: |
+| <img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_1.png" width="200"> | <img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_2.png" width="200"> | <img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_3.png" width="200"> | <img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_4.png" width="200"> | <img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_5.png" width="200"> |
+
+
 
 ##Architecture and Dependency graph
 ![dependency graph](https://github.com/eltonkola/Stox/blob/main/images/module_graph.svg)
