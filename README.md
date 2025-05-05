@@ -8,6 +8,12 @@ StoX is a simple stocks tracker app that uses the Polygon API to fetch stock dat
 ## Resources
 Icon generated with leonardo app (https://leonardo.app/), adapted with icon.kitchen(https://icon.kitchen/)
 Theme generated with material theme builder (https://material-foundation.github.io/material-theme-builder/)
+Api key generated with polygon.io (https://polygon.io/)
+
+## Tradeoffs
+- The app uses the Polygon API to fetch stock data. It has a relatively low rate limit, so it's not a good idea to use it for a production app. The app handles the rate limit errors and displays a message to the user.
+- Add to many stocks and the easily hits the rate limit. The app uses a local database to store the stocks and the details.
+
 
 ## Screenshots
 
