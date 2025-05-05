@@ -2,17 +2,20 @@
 <img src="https://github.com/eltonkola/Stox/blob/main/images/play_store_512.png" width="200">
 Stock demo app 
 
-## Screenshots
-<img src="https://github.com/eltonkola/Stox/blob/main/images/play_store_512.png" width="200">
-
 
 ##Resources
 Icon generated with leonardo app (https://leonardo.app/), adapted with icon.kitchen(https://icon.kitchen/)
 Theme generated with material theme builder (https://material-foundation.github.io/material-theme-builder/)
 
+## Screenshots
+<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_1.png" width="200">
+<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_2.png" width="200">
+<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_3.png" width="200">
+<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_4.png" width="200">
+<img src="https://github.com/eltonkola/Stox/blob/main/images/screenshot_5.png" width="200">
 
-##Dependency graph
-![dependency graph](https://github.com/eltonkola/Stox/blob/main/module_graph.svg)
+##Architecture and Dependency graph
+![dependency graph](https://github.com/eltonkola/Stox/blob/main/images/module_graph.svg)
 
 ###Core data
 This module contains the data layer of the app. It contains the repository, local and remote data sources.
