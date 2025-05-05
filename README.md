@@ -5,7 +5,7 @@
 StoX is a simple stocks tracker app that uses the Polygon API to fetch stock data.
 
 
-##Resources
+## Resources
 Icon generated with leonardo app (https://leonardo.app/), adapted with icon.kitchen(https://icon.kitchen/)
 Theme generated with material theme builder (https://material-foundation.github.io/material-theme-builder/)
 
@@ -17,19 +17,19 @@ Theme generated with material theme builder (https://material-foundation.github.
 
 
 
-##Architecture and Dependency graph
+## Architecture and Dependency graph
 ![dependency graph](https://github.com/eltonkola/Stox/blob/main/images/module_graph.svg)
 
-###Core data
+### Core data
 This module contains the data layer of the app. It contains the repository, local and remote data sources.
 
-###Core domain
+### Core domain
 This module contains the domain layer of the app. It contains the use cases and the models.
 
-###Core UI
+### Core UI
 It contains the components and the themes.
 
-###Feature modules
+### Feature modules
 Each feature module contains the screens and the view models.
 
 
