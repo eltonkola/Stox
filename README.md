@@ -1,6 +1,8 @@
 # Stox
-<img src="https://github.com/eltonkola/Stox/blob/main/images/play_store_512.png" width="200">
-Stock demo app 
+<p align="center">
+  <img src="https://github.com/eltonkola/Stox/blob/main/images/play_store_512.png" width="200">
+</p>
+StoX is a simple stocks tracker app that uses the Polygon API to fetch stock data.
 
 
 ##Resources
