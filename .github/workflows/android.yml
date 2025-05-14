@@ -29,6 +29,13 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew # ./gradlew is at the repo root
 
+      - name: Create local.properties with API Key
+        run: |
+          echo "Creating local.properties file..."
+          echo "polygonApiKey=${{ secrets.POLYGONAPIKEY }}" > local.properties
+          echo "File created. Content:"
+          cat local.properties # For debugging, shows the content
+          
       - name: Run Android Lints
         run: ./gradlew :app:lint # Or :androidApp:lintDebug etc.
     
