@@ -1,0 +1,169 @@
+name: Build and Release Stox Android App
+
+on:
+  workflow_dispatch: # Allows manual triggering
+  # push:
+  #   branches: [ main ] # Example: Trigger on push to main
+  # release:
+  #   types: [ published ] # Example: Trigger when a GitHub Release is published
+
+jobs:
+  lint-android: # Renamed for clarity
+    name: Lint Android App
+    runs-on: ubuntu-latest
+    defaults: # Assuming gradlew is in 'eltonkola' subdirectory
+      run:
+        working-directory: eltonkola
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+        with: # If your wrapper to validate is inside 'eltonkola'
+          root-directory: eltonkola
+
+      - name: Set up JDK 17 (or 21 if your project requires it)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17 # Or 21 if needed for dependencies or your code
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Run Android Lints
+        # Adjust ':app:lint' if your lintable module has a different name
+        # Or run lint for all modules: ./gradlew lint
+        run: ./gradlew :app:lint # Or :androidApp:lintDebug, :androidApp:lintRelease
+
+  build-android:
+    name: Build and Sign Android APK
+    runs-on: ubuntu-latest
+    needs: [lint-android] # Make lint a prerequisite
+    defaults: # Assuming gradlew is in 'eltonkola' subdirectory
+      run:
+        working-directory: eltonkola
+    outputs: # Define output for the signed APK path
+      signed_apk_path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
+      signed_apk_name: androidApp-release-signed.apk # A predictable name for the signed file
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+        with: # If your wrapper to validate is inside 'eltonkola'
+          root-directory: eltonkola
+
+      - name: Set up JDK 17 (or 21)
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17 # Or 21. Ensure consistency with your project's needs.
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Release APK
+        # Ensure ':androidApp:assembleRelease' is the correct task for your project
+        run: ./gradlew :androidApp:assembleRelease
+
+      - name: Sign APK
+        id: sign_apk # Give the step an ID to reference its outputs
+        uses: r0adkll/sign-android-release@v1
+        with:
+          # Path is relative to GITHUB_WORKSPACE/eltonkola/
+          releaseDirectory: androidApp/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        # The output 'signedReleaseFile' from this action will be a full path on the runner
+
+      - name: Verify Signed APK Path Output # Debug step
+        run: echo "Signed APK path from action: ${{ steps.sign_apk.outputs.signedReleaseFile }}"
+
+      - name: Determine Relative Path for Upload # Important: upload-artifact needs a path relative to GITHUB_WORKSPACE
+        id: determine_paths
+        run: |
+          full_path="${{ steps.sign_apk.outputs.signedReleaseFile }}"
+          # GITHUB_WORKSPACE is usually /home/runner/work/Stox/Stox
+          # We need to make the path relative to GITHUB_WORKSPACE
+          # Assuming your gradlew is in 'eltonkola', the base for the releaseDirectory is GITHUB_WORKSPACE/eltonkola
+          # The sign_apk action likely outputs an absolute path on the runner.
+          # Let's construct the expected relative path based on releaseDirectory
+          relative_upload_path="eltonkola/androidApp/build/outputs/apk/release/androidApp-release-signed.apk" # Construct expected relative path
+          echo "Expected relative path for upload: $relative_upload_path"
+          # Check if the file actually exists at the full path given by sign_apk
+          if [ -f "$full_path" ]; then
+            echo "File exists at $full_path"
+            # If you know the signed file is always named androidApp-release-signed.apk in that directory
+            echo "upload_path=$relative_upload_path" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Signed APK not found at $full_path"
+            exit 1
+          fi
+        # working-directory is not needed here as we are using absolute paths and GITHUB_OUTPUT
+
+      - name: Upload Signed APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-apk # Artifact name for download later
+          path: ${{ steps.determine_paths.outputs.upload_path }} # Use the determined relative path
+
+  publish-release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-android]
+    permissions:
+      contents: write # To create releases and upload assets
+    steps:
+      - name: Download Signed APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-apk # Matches upload name
+          path: release-assets/ # This will download the APK into release-assets/
+
+      - name: List Downloaded Files
+        run: ls -R release-assets/
+
+      - name: Set up GitHub CLI
+        run: |
+          type gh > /dev/null 2>&1 || {
+            echo "gh CLI not found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y gh
+          }
+          gh --version
+
+      - name: Create GitHub Release and Upload APK
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v1.0.0 # TODO: Make this dynamic (e.g., from input, or git tag)
+          RELEASE_NAME: "Stox v1.0.0" # TODO: Make this dynamic
+          RELEASE_BODY: |
+            Release of Stox Android App version 1.0.0.
+          # The downloaded artifact structure will place the APK directly in release-assets/
+          # The name of the file inside release-assets/ will be what it was named before upload.
+          # From build-android job's outputs.signed_apk_name or steps.determine_paths.outputs.upload_path's filename part.
+          # Let's assume the downloaded file is release-assets/androidApp-release-signed.apk
+          APK_FILE_PATH: release-assets/androidApp-release-signed.apk # VERIFY THIS FILENAME
+          APK_ASSET_NAME: Stox-v1.0.0.apk # Desired name on the release page
+        run: |
+          echo "Creating release for tag $RELEASE_TAG"
+          # Check if APK_FILE_PATH exists
+          if [ ! -f "$APK_FILE_PATH" ]; then
+            echo "::error::APK file not found at $APK_FILE_PATH after download."
+            ls -R release-assets/ # Show what was actually downloaded
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" \
+            --title "$RELEASE_NAME" \
+            --notes "$RELEASE_BODY" \
+            --draft=false \
+            --prerelease=false \
+            "$APK_FILE_PATH#$APK_ASSET_NAME"
+          echo "Release created and APK uploaded."
