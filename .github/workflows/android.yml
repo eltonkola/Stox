@@ -2,6 +2,15 @@ name: Build and Release Stox Android App
 
 on:
   workflow_dispatch: # Allows manual triggering
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.1). Do not include "v" prefix.'
+        required: true
+        default: '1.0.0'
+      release_notes:
+        description: 'Specific notes for this release (optional). Will be added to a default message.'
+        required: false
+        default: 'General improvements and bug fixes.'
   # push:
   #   branches: [ main ] # Example: Trigger on push to main
   # release:
@@ -35,7 +44,6 @@ jobs:
           echo "polygonApiKey=${{ secrets.POLYGONAPIKEY }}" > local.properties
           echo "File created. Content:"
           cat local.properties # For debugging, shows the content
-
       - name: Run Android Lints
         run: ./gradlew :app:lint # Or :app:lintDebug etc.
 
@@ -67,7 +75,6 @@ jobs:
           echo "polygonApiKey=${{ secrets.POLYGONAPIKEY }}" > local.properties
           echo "File created. Content:"
           cat local.properties # For debugging, shows the content
-
       - name: Build Release APK
         run: ./gradlew :app:assembleRelease
 
@@ -76,19 +83,18 @@ jobs:
           echo "Listing contents of app/build/outputs/apk/release:"
           ls -R app/build/outputs/apk/release || echo "Directory app/build/outputs/apk/release not found or empty after build."
 
-      - name: List available Android SDK Build Tools (for debugging)
-        run: |
-          echo "ANDROID_SDK_ROOT is: $ANDROID_SDK_ROOT"
-          echo "Available build-tools versions:"
-          ls -1 $ANDROID_SDK_ROOT/build-tools/ || echo "Could not list build-tools directory."
-
       - name: Setup build tool version variable
         shell: bash
         run: |
-          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
-          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
-          echo Last build tool version is: $BUILD_TOOL_VERSION
-          
+          # Attempt to find build tools, sort version-sensitively if possible
+          if command -v sort &> /dev/null && sort --version-sort --help &> /dev/null; then
+            LATEST_BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | sort -V | tail -n 1)
+          else # Fallback to simple lexical sort if sort -V is not available
+            LATEST_BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          fi
+          echo "Determined latest build tool version: $LATEST_BUILD_TOOL_VERSION"
+          echo "BUILD_TOOL_VERSION_DYNAMIC=$LATEST_BUILD_TOOL_VERSION" >> $GITHUB_ENV
+
       - name: Sign APK
         id: sign_apk
         uses: r0adkll/sign-android-release@v1
@@ -99,8 +105,8 @@ jobs:
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
         env:
-          BUILD_TOOLS_VERSION: "34.0.0"
-        
+          # Use the dynamically determined build tool version
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION_DYNAMIC }}
 
       - name: Verify Signed APK and Prepare Upload Path
         id: verify_signed_apk
@@ -112,11 +118,12 @@ jobs:
             echo "upload_file_path=$signed_apk_path" >> $GITHUB_OUTPUT
           else
             echo "::error::Signed APK not found at '$signed_apk_path' (output from sign_apk step)."
-            echo "This can happen if the 'releaseDirectory' or 'buildToolsVersion' for sign_apk was incorrect or if signing failed silently."
+            echo "This can happen if the 'releaseDirectory' or 'BUILD_TOOLS_VERSION' for sign_apk was incorrect or if signing failed silently."
+            echo "BUILD_TOOLS_VERSION used was: ${{ env.BUILD_TOOL_VERSION_DYNAMIC }}"
             echo "Listing contents of expected directory: app/build/outputs/apk/release/"
             ls -R app/build/outputs/apk/release/ || echo "Directory app/build/outputs/apk/release/ not found or empty."
-            echo "Re-listing available build-tools versions (from ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT/build-tools/):"
-            ls -1 $ANDROID_SDK_ROOT/build-tools/ || echo "Could not list build-tools directory."
+            echo "Re-listing available build-tools versions from /usr/local/lib/android/sdk/build-tools/:"
+            ls -1 /usr/local/lib/android/sdk/build-tools/ || echo "Could not list build-tools directory."
             exit 1
           fi
 
@@ -138,7 +145,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: signed-apk # Matches upload name
-          path: release-assets/ # This will download the APK into release-assets/
+          path: release-assets/
 
       - name: List Downloaded Files
         run: |
@@ -154,33 +161,47 @@ jobs:
           }
           gh --version
 
-
       - name: Create GitHub Release and Upload APK
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: v1.0.0  # TODO: Make this dynamic
-          RELEASE_NAME: "Stox v1.0.0" # TODO: Make this dynamic
-          RELEASE_BODY: |
-            Release of Stox Android App version 1.0.1.
-            Automated build.
-          # VVV THIS IS THE KEY CHANGE VVV
-          APK_FILE_PATH: release-assets/app-release-unsigned-signed.apk
-          APK_ASSET_NAME: Stox-v1.0.1.apk 
+          # Use inputs if available (workflow_dispatch), otherwise provide fallbacks
+          INPUT_VERSION: ${{ github.event.inputs.version || '0.0.0-default' }}
+          INPUT_RELEASE_NOTES: ${{ github.event.inputs.release_notes || 'No specific notes provided for this automated build.' }}
         run: |
-          echo "Creating release for tag $RELEASE_TAG"
-          echo "Expecting APK at: $APK_FILE_PATH" # Debug echo
-          # Check if APK_FILE_PATH exists
-          if [ ! -f "$APK_FILE_PATH" ]; then
-            echo "::error::APK file not found at $APK_FILE_PATH after download."
+          RELEASE_TAG="v${INPUT_VERSION}"
+          RELEASE_NAME="Stox ${RELEASE_TAG}"
+          APK_ASSET_NAME="Stox-${RELEASE_TAG}.apk"
+          
+          RELEASE_BODY=$(cat <<EOF
+          Release of Stox Android App version ${INPUT_VERSION}.
+
+          ${INPUT_RELEASE_NOTES}
+          EOF
+          )
+
+          echo "Creating release for tag: $RELEASE_TAG"
+          echo "Release Name: $RELEASE_NAME"
+          echo "APK Asset Name: $APK_ASSET_NAME"
+          echo "--- Release Body ---"
+          echo "$RELEASE_BODY"
+          echo "--------------------"
+          echo "Expecting APK at: release-assets/app-release-unsigned-signed.apk"
+          
+          # The local path to the downloaded APK
+          LOCAL_APK_FILE_PATH="release-assets/app-release-unsigned-signed.apk"
+
+          if [ ! -f "$LOCAL_APK_FILE_PATH" ]; then
+            echo "::error::APK file not found at $LOCAL_APK_FILE_PATH after download."
             echo "Actual files in release-assets/:"
             ls -R release-assets/ # Show what was actually downloaded
             exit 1
           fi
+
           gh release create "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "$RELEASE_NAME" \
             --notes "$RELEASE_BODY" \
             --draft=false \
             --prerelease=false \
-            "$APK_FILE_PATH#$APK_ASSET_NAME"
+            "$LOCAL_APK_FILE_PATH#$APK_ASSET_NAME"
           echo "Release created and APK uploaded."
