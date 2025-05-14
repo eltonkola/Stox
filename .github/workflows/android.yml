@@ -99,6 +99,9 @@ jobs:
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
           buildToolsVersion: ${{ BUILD_TOOL_VERSION }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+        
 
       - name: Verify Signed APK and Prepare Upload Path
         id: verify_signed_apk
