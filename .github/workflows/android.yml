@@ -84,8 +84,8 @@ jobs:
         # The output 'signedReleaseFile' from this action will be a full path on the runner
 
       - name: Verify Signed APK Path Output # Debug step
-        run: echo "Signed APK path from action: ${{ steps.sign_apk.outputs.signedReleaseFile }}"
-
+        run: echo "Signed APK path from action"
+        
       - name: Determine Relative Path for Upload # Important: upload-artifact needs a path relative to GITHUB_WORKSPACE
         id: determine_paths
         run: |
