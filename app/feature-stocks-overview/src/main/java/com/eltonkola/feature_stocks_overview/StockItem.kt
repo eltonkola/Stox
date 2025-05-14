@@ -48,9 +48,22 @@ fun StockItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
+                if(stock.nrStocks > 0) {
+                    Text(
+                        text = "Nr of stocks: ${stock.nrStocks}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             Column(horizontalAlignment = Alignment.End) {
+                if(stock.nrStocks > 0) {
+                    Text(
+                        text = "$${stock.currentPrice * stock.nrStocks}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
                 Text(
                     text = "$${stock.currentPrice}",
                     style = MaterialTheme.typography.headlineMedium

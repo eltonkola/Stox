@@ -12,4 +12,5 @@ data class Stock(
     val changePercentage: Double,
     val lastUpdated: Long,
     val creationDate: Long = System.currentTimeMillis(),
+    val nrStocks: Int = 0,
 )

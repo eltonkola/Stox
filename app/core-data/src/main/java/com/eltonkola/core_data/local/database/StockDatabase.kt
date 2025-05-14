@@ -8,7 +8,7 @@ import com.eltonkola.core_data.local.dao.StockDao
 import com.eltonkola.core_data.local.entities.Stock
 import com.eltonkola.core_data.local.entities.StockDetails
 
-@Database(entities = [Stock::class, StockDetails::class], version = 2)
+@Database(entities = [Stock::class, StockDetails::class], version = 3)
 abstract class StockDatabase : RoomDatabase() {
     abstract fun stockDao(): StockDao
 

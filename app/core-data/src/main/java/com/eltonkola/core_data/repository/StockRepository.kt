@@ -45,6 +45,16 @@ class StockRepository(
         }
     }
 
+    suspend fun getStockLocalData(symbol: String): StockDetails? {
+        val localDetails = stockDao.getStockDetails(symbol)
+        return if (localDetails != null) {
+            localDetails
+        } else {
+            refreshStockDetails(symbol)
+            stockDao.getStockDetails(symbol)
+        }
+    }
+
     suspend fun getStockDetailsExtra(symbol: String): StockDetails? {
         val localDetails = stockDao.getStockDetails(symbol)
         return if (localDetails != null && !localDetails.incompleteProfile) {
@@ -71,6 +81,14 @@ class StockRepository(
             return false
         }
     }
+
+    suspend fun getStock(symbol: String): Stock? {
+        return stockDao.getStockBySymbol(symbol)
+    }
+    suspend fun updateStock(stock: Stock) {
+        return stockDao.updateStock(stock)
+    }
+
 
     // Refresh specific stock data
     suspend fun refreshStockData(symbol: String): Boolean {

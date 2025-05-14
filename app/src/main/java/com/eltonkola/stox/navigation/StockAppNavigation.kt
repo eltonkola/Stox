@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.eltonkola.feature_add_stock.AddStockScreen
+import com.eltonkola.feature_edit_stock.EditStockScreen
 import com.eltonkola.feature_stock_detail.StockDetailScreen
 import com.eltonkola.feature_stock_list.StockListScreen
 import com.eltonkola.feature_stocks_overview.StocksOverviewScreen
@@ -48,6 +49,19 @@ fun StockAppNavigation(
             )
         }
 
+        composable(
+            "stock_edit/{stockSymbol}",
+            arguments = listOf(navArgument("stockSymbol") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val stockSymbol = backStackEntry.arguments?.getString("stockSymbol") ?: ""
+            EditStockScreen(
+                stockID = stockSymbol,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+            )
+        }
+
         composable("stock_list") {
             StockListScreen(
                 onBackClick = {
@@ -55,6 +69,9 @@ fun StockAppNavigation(
                 },
                 onAddStockClick = {
                     navController.navigate("add_stock")
+                },
+                onEditStock = {
+                    navController.navigate("stock_edit/$it")
                 }
             )
         }

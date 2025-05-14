@@ -10,12 +10,14 @@ import com.eltonkola.core_domain.usecases.AddStockUseCase
 import com.eltonkola.core_domain.usecases.GetAllStocksUseCase
 import com.eltonkola.core_domain.usecases.GetErrorUseCase
 import com.eltonkola.core_domain.usecases.GetHistoricalDataUseCase
+import com.eltonkola.core_domain.usecases.GetLocalStockUseCase
 import com.eltonkola.core_domain.usecases.GetStockDetailsUseCase
 import com.eltonkola.core_domain.usecases.GetStockExtraDetailsUseCase
 import com.eltonkola.core_domain.usecases.RefreshStockDataUseCase
 import com.eltonkola.core_domain.usecases.RemoveStockUseCase
 import com.eltonkola.core_domain.usecases.ResetErrorUseCase
 import com.eltonkola.core_domain.usecases.SearchStocksUseCase
+import com.eltonkola.core_domain.usecases.UpdateLocalStockUseCase
 import com.eltonkola.stox.BuildConfig
 import dagger.Module
 import dagger.Provides
@@ -129,5 +131,17 @@ object AppModule {
     @Singleton
     fun provideGetHistoricalDataUseCase(repository: StockRepository): GetHistoricalDataUseCase {
         return GetHistoricalDataUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetLocalStockUseCase(repository: StockRepository): GetLocalStockUseCase {
+        return GetLocalStockUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUpdateLocalStockUseCase(repository: StockRepository): UpdateLocalStockUseCase {
+        return UpdateLocalStockUseCase(repository)
     }
 }

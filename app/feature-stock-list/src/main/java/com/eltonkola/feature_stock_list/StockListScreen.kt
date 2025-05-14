@@ -49,7 +49,8 @@ import com.eltonkola.core_data.local.entities.Stock
 fun StockListScreen(
     viewModel: StockListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
-    onAddStockClick: () -> Unit
+    onAddStockClick: () -> Unit,
+    onEditStock: (String) -> Unit
 ) {
     val stocks by viewModel.stocks.collectAsState()
 
@@ -82,6 +83,7 @@ fun StockListScreen(
             ) { stock ->
                 SwipeToDeleteStockItem(
                     stock = stock,
+                    onClick = { onEditStock(stock.symbol) },
                     onDelete = { viewModel.removeStock(stock.symbol) }
                 )
             }
@@ -115,6 +117,7 @@ fun StockListScreen(
 @Composable
 fun SwipeToDeleteStockItem(
     stock: Stock,
+    onClick:() -> Unit,
     onDelete: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -148,13 +151,14 @@ fun SwipeToDeleteStockItem(
             }
         },
     ) {
-        StockListItem(stock)
+        StockListItem(stock, onClick)
     }
 }
 
 @Composable
-fun StockListItem(stock: Stock) {
+fun StockListItem(stock: Stock, onClick: () -> Unit ) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
