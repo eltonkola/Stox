@@ -88,14 +88,6 @@ jobs:
           BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
           echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
           echo Last build tool version is: $BUILD_TOOL_VERSION
-
-      - name: Debug Secrets Presence (Temporary)
-        run: |
-          if [ -z "${{ secrets.ANDROID_ALIAS }}" ]; then echo "::warning::ANDROID_ALIAS secret is empty or not set."; else echo "ANDROID_ALIAS secret is present."; fi
-          if [ -z "${{ secrets.ANDROID_KEY_STORE_PASSWORD }}" ]; then echo "::warning::ANDROID_KEY_STORE_PASSWORD secret is empty or not set."; else echo "ANDROID_KEY_STORE_PASSWORD secret is present."; fi
-          if [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ]; then echo "::warning::ANDROID_KEY_PASSWORD secret is empty or not set."; else echo "ANDROID_KEY_PASSWORD secret is present."; fi
-          if [ -z "${{ secrets.ANDROID_SIGNING_KEY }}" ]; then echo "::warning::ANDROID_SIGNING_KEY secret is empty or not set."; else echo "ANDROID_SIGNING_KEY secret is present."; fi
-
           
       - name: Sign APK
         id: sign_apk
@@ -147,7 +139,6 @@ jobs:
         with:
           name: signed-apk # Matches upload name
           path: release-assets/ # This will download the APK into release-assets/
-                                # e.g., release-assets/app-release-signed.apk
 
       - name: List Downloaded Files
         run: |
@@ -155,28 +146,22 @@ jobs:
           ls -R release-assets/
 
       - name: Set up GitHub CLI
-        run: |
-          type gh > /dev/null 2>&1 || {
-            echo "gh CLI not found, installing..."
-            sudo apt-get update
-            sudo apt-get install -y gh
-          }
-          gh --version
+        # ... (rest of the step is fine)
 
       - name: Create GitHub Release and Upload APK
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: v1.0.1 # TODO: Make this dynamic (e.g., from input, or git tag)
-          RELEASE_NAME: "Stox v1.0.1" # TODO: Make this dynamic
+          RELEASE_TAG: v1.0.0  # TODO: Make this dynamic
+          RELEASE_NAME: "Stox v1.0.0" # TODO: Make this dynamic
           RELEASE_BODY: |
             Release of Stox Android App version 1.0.1.
             Automated build.
-          # This path assumes the uploaded artifact contained a file named 'app-release-signed.apk'
-          # (or whatever the signing step actually named it)
-          APK_FILE_PATH: release-assets/app-release-signed.apk # VERIFY THIS FILENAME matches the actual signed file name
-          APK_ASSET_NAME: Stox-v1.0.1.apk # Desired name on the release page
+          # VVV THIS IS THE KEY CHANGE VVV
+          APK_FILE_PATH: release-assets/app-release-unsigned-signed.apk
+          APK_ASSET_NAME: Stox-v1.0.1.apk 
         run: |
           echo "Creating release for tag $RELEASE_TAG"
+          echo "Expecting APK at: $APK_FILE_PATH" # Debug echo
           # Check if APK_FILE_PATH exists
           if [ ! -f "$APK_FILE_PATH" ]; then
             echo "::error::APK file not found at $APK_FILE_PATH after download."
