@@ -37,7 +37,7 @@ jobs:
           cat local.properties # For debugging, shows the content
           
       - name: Run Android Lints
-        run: ./gradlew :app:lint # Or :androidApp:lintDebug etc.
+        run: ./gradlew :app:lint # Or :app:lintDebug etc.
     
   build-android:
     name: Build and Sign Android APK
@@ -45,7 +45,7 @@ jobs:
     needs: [lint-android] # Make lint a prerequisite
     outputs: # Define output for the signed APK path
       signed_apk_path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
-      signed_apk_name: androidApp-release-signed.apk # A predictable name for the signed file
+      signed_apk_name: app-release-signed.apk # A predictable name for the signed file
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
         uses: r0adkll/sign-android-release@v1
         with:
     
-          releaseDirectory: androidApp/build/outputs/apk/release
+          releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
           alias: ${{ secrets.ANDROID_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
