@@ -14,12 +14,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # Checks out to /home/runner/work/Stox/
+        uses: actions/checkout@v4
 
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1 # Validates gradlew at repo root
-        
-      - name: Set up JDK 17 (or 21)
+        uses: gradle/wrapper-validation-action@v1
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -27,7 +27,7 @@ jobs:
           cache: gradle
 
       - name: Make gradlew executable
-        run: chmod +x ./gradlew # ./gradlew is at the repo root
+        run: chmod +x ./gradlew
 
       - name: Create local.properties with API Key
         run: |
@@ -35,17 +35,15 @@ jobs:
           echo "polygonApiKey=${{ secrets.POLYGONAPIKEY }}" > local.properties
           echo "File created. Content:"
           cat local.properties # For debugging, shows the content
-          
+
       - name: Run Android Lints
-        run: ./gradlew :app:lint # Or :androidApp:lintDebug etc.
-    
+        run: ./gradlew :app:lint # Or :app:lintDebug etc.
+
   build-android:
     name: Build and Sign Android APK
     runs-on: ubuntu-latest
     needs: [lint-android] # Make lint a prerequisite
-    outputs: # Define output for the signed APK path
-      signed_apk_path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
-      signed_apk_name: androidApp-release-signed.apk # A predictable name for the signed file
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -53,10 +51,10 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
 
-      - name: Set up JDK 17 (or 21)
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: 17 # Or 21. Ensure consistency with your project's needs.
+          java-version: 17
           distribution: 'temurin'
           cache: gradle
 
@@ -69,42 +67,56 @@ jobs:
           echo "polygonApiKey=${{ secrets.POLYGONAPIKEY }}" > local.properties
           echo "File created. Content:"
           cat local.properties # For debugging, shows the content
-          
+
       - name: Build Release APK
         run: ./gradlew :app:assembleRelease
 
+      - name: List unsigned APKs (for debugging)
+        run: |
+          echo "Listing contents of app/build/outputs/apk/release:"
+          ls -R app/build/outputs/apk/release || echo "Directory app/build/outputs/apk/release not found or empty after build."
+
+      - name: List available Android SDK Build Tools (for debugging)
+        run: |
+          echo "ANDROID_SDK_ROOT is: $ANDROID_SDK_ROOT"
+          echo "Available build-tools versions:"
+          ls -1 $ANDROID_SDK_ROOT/build-tools/ || echo "Could not list build-tools directory."
+
       - name: Sign APK
-        id: sign_apk # Give the step an ID to reference its outputs
+        id: sign_apk
         uses: r0adkll/sign-android-release@v1
         with:
-    
-          releaseDirectory: androidApp/build/outputs/apk/release
+          releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
           alias: ${{ secrets.ANDROID_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
- 
-      - name: Verify Signed APK Path Output # Debug step
-        run: echo "Signed APK path from action"
-        
-      - name: Determine Relative Path for Upload # Important: upload-artifact needs a path relative to GITHUB_WORKSPACE
-        id: determine_paths
+          buildToolsVersion: "34.0.0" # <<< IMPORTANT: Replace "34.0.0" with YOUR project's actual buildToolsVersion (e.g., from app/build.gradle)
+
+      - name: Verify Signed APK and Prepare Upload Path
+        id: verify_signed_apk
         run: |
-          full_path="${{ steps.sign_apk.outputs.signedReleaseFile }}"
-          echo "Expected relative path for upload: $relative_upload_path"
-          if [ -f "$full_path" ]; then
-            echo "File exists at $full_path"
-            echo "upload_path=$relative_upload_path" >> $GITHUB_OUTPUT
+          signed_apk_path="${{ steps.sign_apk.outputs.signedReleaseFile }}"
+          echo "Signed APK path from signing action: $signed_apk_path"
+          if [ -f "$signed_apk_path" ]; then
+            echo "Signed APK confirmed to exist at: $signed_apk_path"
+            echo "upload_file_path=$signed_apk_path" >> $GITHUB_OUTPUT
           else
-            echo "::error::Signed APK not found at $full_path"
+            echo "::error::Signed APK not found at '$signed_apk_path' (output from sign_apk step)."
+            echo "This can happen if the 'releaseDirectory' or 'buildToolsVersion' for sign_apk was incorrect or if signing failed silently."
+            echo "Listing contents of expected directory: app/build/outputs/apk/release/"
+            ls -R app/build/outputs/apk/release/ || echo "Directory app/build/outputs/apk/release/ not found or empty."
+            echo "Re-listing available build-tools versions (from ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT/build-tools/):"
+            ls -1 $ANDROID_SDK_ROOT/build-tools/ || echo "Could not list build-tools directory."
             exit 1
           fi
-       
+
       - name: Upload Signed APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: signed-apk # Artifact name for download later
-          path: ${{ steps.determine_paths.outputs.upload_path }} # Use the determined relative path
+          path: ${{ steps.verify_signed_apk.outputs.upload_file_path }}
+          # retention-days: 7 # Optional: how long to keep the artifact
 
   publish-release:
     name: Publish GitHub Release
@@ -118,9 +130,12 @@ jobs:
         with:
           name: signed-apk # Matches upload name
           path: release-assets/ # This will download the APK into release-assets/
+                                # e.g., release-assets/app-release-signed.apk
 
       - name: List Downloaded Files
-        run: ls -R release-assets/
+        run: |
+          echo "Listing contents of release-assets/ after download:"
+          ls -R release-assets/
 
       - name: Set up GitHub CLI
         run: |
@@ -134,25 +149,26 @@ jobs:
       - name: Create GitHub Release and Upload APK
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: v1.0.0 # TODO: Make this dynamic (e.g., from input, or git tag)
-          RELEASE_NAME: "Stox v1.0.0" # TODO: Make this dynamic
+          RELEASE_TAG: v1.0.1 # TODO: Make this dynamic (e.g., from input, or git tag)
+          RELEASE_NAME: "Stox v1.0.1" # TODO: Make this dynamic
           RELEASE_BODY: |
-            Release of Stox Android App version 1.0.0.
-          # The downloaded artifact structure will place the APK directly in release-assets/
-          # The name of the file inside release-assets/ will be what it was named before upload.
-          # From build-android job's outputs.signed_apk_name or steps.determine_paths.outputs.upload_path's filename part.
-          # Let's assume the downloaded file is release-assets/androidApp-release-signed.apk
-          APK_FILE_PATH: release-assets/androidApp-release-signed.apk # VERIFY THIS FILENAME
-          APK_ASSET_NAME: Stox-v1.0.0.apk # Desired name on the release page
+            Release of Stox Android App version 1.0.1.
+            Automated build.
+          # This path assumes the uploaded artifact contained a file named 'app-release-signed.apk'
+          # (or whatever the signing step actually named it)
+          APK_FILE_PATH: release-assets/app-release-signed.apk # VERIFY THIS FILENAME matches the actual signed file name
+          APK_ASSET_NAME: Stox-v1.0.1.apk # Desired name on the release page
         run: |
           echo "Creating release for tag $RELEASE_TAG"
           # Check if APK_FILE_PATH exists
           if [ ! -f "$APK_FILE_PATH" ]; then
             echo "::error::APK file not found at $APK_FILE_PATH after download."
+            echo "Actual files in release-assets/:"
             ls -R release-assets/ # Show what was actually downloaded
             exit 1
           fi
           gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
             --title "$RELEASE_NAME" \
             --notes "$RELEASE_BODY" \
             --draft=false \
