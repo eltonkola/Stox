@@ -138,11 +138,7 @@ jobs:
           RELEASE_NAME: "Stox v1.0.0" # TODO: Make this dynamic
           RELEASE_BODY: |
             Release of Stox Android App version 1.0.0.
-          # The downloaded artifact structure will place the APK directly in release-assets/
-          # The name of the file inside release-assets/ will be what it was named before upload.
-          # From build-android job's outputs.signed_apk_name or steps.determine_paths.outputs.upload_path's filename part.
-          # Let's assume the downloaded file is release-assets/androidApp-release-signed.apk
-          APK_FILE_PATH: release-assets/androidApp-release-signed.apk # VERIFY THIS FILENAME
+          APK_FILE_PATH: release-assets/app-release-signed.apk # VERIFY THIS FILENAME
           APK_ASSET_NAME: Stox-v1.0.0.apk # Desired name on the release page
         run: |
           echo "Creating release for tag $RELEASE_TAG"
