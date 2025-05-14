@@ -88,7 +88,15 @@ jobs:
           BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
           echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
           echo Last build tool version is: $BUILD_TOOL_VERSION
-        
+
+      - name: Debug Secrets Presence (Temporary)
+        run: |
+          if [ -z "${{ secrets.ANDROID_ALIAS }}" ]; then echo "::warning::ANDROID_ALIAS secret is empty or not set."; else echo "ANDROID_ALIAS secret is present."; fi
+          if [ -z "${{ secrets.ANDROID_KEY_STORE_PASSWORD }}" ]; then echo "::warning::ANDROID_KEY_STORE_PASSWORD secret is empty or not set."; else echo "ANDROID_KEY_STORE_PASSWORD secret is present."; fi
+          if [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ]; then echo "::warning::ANDROID_KEY_PASSWORD secret is empty or not set."; else echo "ANDROID_KEY_PASSWORD secret is present."; fi
+          if [ -z "${{ secrets.ANDROID_SIGNING_KEY }}" ]; then echo "::warning::ANDROID_SIGNING_KEY secret is empty or not set."; else echo "ANDROID_SIGNING_KEY secret is present."; fi
+
+          
       - name: Sign APK
         id: sign_apk
         uses: r0adkll/sign-android-release@v1
