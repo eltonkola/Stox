@@ -43,9 +43,6 @@ jobs:
     name: Build and Sign Android APK
     runs-on: ubuntu-latest
     needs: [lint-android] # Make lint a prerequisite
-    defaults: # Assuming gradlew is in 'eltonkola' subdirectory
-      run:
-        working-directory: eltonkola
     outputs: # Define output for the signed APK path
       signed_apk_path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
       signed_apk_name: androidApp-release-signed.apk # A predictable name for the signed file
@@ -55,8 +52,6 @@ jobs:
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
-        with: # If your wrapper to validate is inside 'eltonkola'
-          root-directory: eltonkola
 
       - name: Set up JDK 17 (or 21)
         uses: actions/setup-java@v4
@@ -76,7 +71,7 @@ jobs:
         id: sign_apk # Give the step an ID to reference its outputs
         uses: r0adkll/sign-android-release@v1
         with:
-          # Path is relative to GITHUB_WORKSPACE/eltonkola/
+    
           releaseDirectory: androidApp/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
           alias: ${{ secrets.ANDROID_ALIAS }}
@@ -91,24 +86,15 @@ jobs:
         id: determine_paths
         run: |
           full_path="${{ steps.sign_apk.outputs.signedReleaseFile }}"
-          # GITHUB_WORKSPACE is usually /home/runner/work/Stox/Stox
-          # We need to make the path relative to GITHUB_WORKSPACE
-          # Assuming your gradlew is in 'eltonkola', the base for the releaseDirectory is GITHUB_WORKSPACE/eltonkola
-          # The sign_apk action likely outputs an absolute path on the runner.
-          # Let's construct the expected relative path based on releaseDirectory
-          relative_upload_path="eltonkola/androidApp/build/outputs/apk/release/androidApp-release-signed.apk" # Construct expected relative path
           echo "Expected relative path for upload: $relative_upload_path"
-          # Check if the file actually exists at the full path given by sign_apk
           if [ -f "$full_path" ]; then
             echo "File exists at $full_path"
-            # If you know the signed file is always named androidApp-release-signed.apk in that directory
             echo "upload_path=$relative_upload_path" >> $GITHUB_OUTPUT
           else
             echo "::error::Signed APK not found at $full_path"
             exit 1
           fi
-        # working-directory is not needed here as we are using absolute paths and GITHUB_OUTPUT
-
+       
       - name: Upload Signed APK Artifact
         uses: actions/upload-artifact@v4
         with:
