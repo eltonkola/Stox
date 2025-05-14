@@ -4,6 +4,8 @@
 </p>
 StoX is a simple stocks tracker app that uses the Polygon API to fetch stock data.
 
+## Setup
+set 'polygonApiKey' in your local.properties file and build the app 
 
 ## Resources
 Icon generated with leonardo app (https://leonardo.app/), adapted with icon.kitchen(https://icon.kitchen/)
