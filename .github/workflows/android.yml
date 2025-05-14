@@ -82,6 +82,13 @@ jobs:
           echo "Available build-tools versions:"
           ls -1 $ANDROID_SDK_ROOT/build-tools/ || echo "Could not list build-tools directory."
 
+      - name: Setup build tool version variable
+        shell: bash
+        run: |
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+          echo Last build tool version is: $BUILD_TOOL_VERSION
+        
       - name: Sign APK
         id: sign_apk
         uses: r0adkll/sign-android-release@v1
@@ -91,7 +98,7 @@ jobs:
           alias: ${{ secrets.ANDROID_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: "34.0.0" # <<< IMPORTANT: Replace "34.0.0" with YOUR project's actual buildToolsVersion (e.g., from app/build.gradle)
+          buildToolsVersion: ${{ BUILD_TOOL_VERSION }}
 
       - name: Verify Signed APK and Prepare Upload Path
         id: verify_signed_apk
