@@ -76,17 +76,22 @@ jobs:
           echo "Listing contents of app/build/outputs/apk/release:"
           ls -R app/build/outputs/apk/release || echo "Directory app/build/outputs/apk/release not found or empty after build."
 
+      - name: List available Android SDK Build Tools (for debugging)
+        run: |
+          echo "ANDROID_SDK_ROOT is: $ANDROID_SDK_ROOT"
+          echo "Available build-tools versions:"
+          ls -1 $ANDROID_SDK_ROOT/build-tools/ || echo "Could not list build-tools directory."
+
       - name: Sign APK
         id: sign_apk
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: app/build/outputs/apk/release # <<< CORRECTED PATH
+          releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
           alias: ${{ secrets.ANDROID_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          # Note: The action typically names the output file like app-release-signed.apk
-          # and its output 'signedReleaseFile' will be the full path to this file.
+          buildToolsVersion: "34.0.0" # <<< IMPORTANT: Replace "34.0.0" with YOUR project's actual buildToolsVersion (e.g., from app/build.gradle)
 
       - name: Verify Signed APK and Prepare Upload Path
         id: verify_signed_apk
@@ -98,9 +103,11 @@ jobs:
             echo "upload_file_path=$signed_apk_path" >> $GITHUB_OUTPUT
           else
             echo "::error::Signed APK not found at '$signed_apk_path' (output from sign_apk step)."
-            echo "This can happen if the 'releaseDirectory' for sign_apk was incorrect or if signing failed silently."
+            echo "This can happen if the 'releaseDirectory' or 'buildToolsVersion' for sign_apk was incorrect or if signing failed silently."
             echo "Listing contents of expected directory: app/build/outputs/apk/release/"
             ls -R app/build/outputs/apk/release/ || echo "Directory app/build/outputs/apk/release/ not found or empty."
+            echo "Re-listing available build-tools versions (from ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT/build-tools/):"
+            ls -1 $ANDROID_SDK_ROOT/build-tools/ || echo "Could not list build-tools directory."
             exit 1
           fi
 
@@ -108,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: signed-apk # Artifact name for download later
-          path: ${{ steps.verify_signed_apk.outputs.upload_file_path }} # Use the verified full path to the single APK file
+          path: ${{ steps.verify_signed_apk.outputs.upload_file_path }}
           # retention-days: 7 # Optional: how long to keep the artifact
 
   publish-release:
