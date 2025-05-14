@@ -33,6 +33,7 @@ fun getApiKey(project: Project, propertyName: String): String {
 android {
     namespace = "com.eltonkola.stox"
     compileSdk = 35
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         applicationId = "com.eltonkola.stox"
