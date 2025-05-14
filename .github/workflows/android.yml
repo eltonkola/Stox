@@ -146,7 +146,14 @@ jobs:
           ls -R release-assets/
 
       - name: Set up GitHub CLI
-        # ... (rest of the step is fine)
+        run: |
+          type gh > /dev/null 2>&1 || {
+            echo "gh CLI not found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y gh
+          }
+          gh --version
+
 
       - name: Create GitHub Release and Upload APK
         env:
