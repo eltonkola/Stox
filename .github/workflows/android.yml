@@ -11,7 +11,7 @@ jobs:
   lint-android:
     name: Lint Android App
     runs-on: ubuntu-latest
-    # REMOVE 'defaults' block if gradlew is at repo root
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4 # Checks out to /home/runner/work/Stox/
@@ -63,9 +63,15 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Create local.properties with API Key
+        run: |
+          echo "Creating local.properties file..."
+          echo "polygonApiKey=${{ secrets.POLYGONAPIKEY }}" > local.properties
+          echo "File created. Content:"
+          cat local.properties # For debugging, shows the content
+          
       - name: Build Release APK
-        # Ensure ':androidApp:assembleRelease' is the correct task for your project
-        run: ./gradlew :androidApp:assembleRelease
+        run: ./gradlew :app:assembleRelease
 
       - name: Sign APK
         id: sign_apk # Give the step an ID to reference its outputs
@@ -77,8 +83,7 @@ jobs:
           alias: ${{ secrets.ANDROID_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        # The output 'signedReleaseFile' from this action will be a full path on the runner
-
+ 
       - name: Verify Signed APK Path Output # Debug step
         run: echo "Signed APK path from action"
         
